@@ -4,17 +4,21 @@ import {
   Controller,
   HttpCode,
   Post,
+  UsePipes,
 } from "@nestjs/common";
 import { hash } from "bcryptjs";
+import { ZodValidationPipe } from "src/pipes/zod-validation-pipe";
 import { PrismaService } from "src/prisma/prisma.service";
 import { z } from "zod";
 
+// tipar
 const createAccountBodySchema = z.object({
   name: z.string(),
   email: z.string().email(),
   password: z.string(),
 });
 
+// para inferir a tipagem
 type CreateAccountBodySchema = z.infer<typeof createAccountBodySchema>;
 
 @Controller("/accounts")
@@ -23,8 +27,9 @@ export class CreateAccountController {
 
   @Post()
   @HttpCode(201)
-  async handle(@Body() body: any) {
-    const { name, email, password } = createAccountBodySchema.parse(body);
+  @UsePipes(new ZodValidationPipe(createAccountBodySchema))
+  async handle(@Body() body: CreateAccountBodySchema) {
+    const { name, email, password } = createAccountBodySchema.parse(body); // para validar o body
 
     const userWithSameEmail = await this.prisma.user.findUnique({
       where: {
