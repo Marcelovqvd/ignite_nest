@@ -5,8 +5,8 @@ import {
   HttpCode,
   Post,
 } from "@nestjs/common";
+import { hash } from "bcryptjs";
 import { PrismaService } from "src/prisma/prisma.service";
-
 import { z } from "zod";
 
 const createAccountBodySchema = z.object({
@@ -38,11 +38,13 @@ export class CreateAccountController {
       );
     }
 
+    const hashedPassword = await hash(password, 8);
+
     await this.prisma.user.create({
       data: {
         name,
         email,
-        password,
+        password: hashedPassword,
       },
     });
   }
